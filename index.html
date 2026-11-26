@@ -1,0 +1,421 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>筑计划 · 个性化学习工作台</title>
+  <link rel="stylesheet" href="css/main.css?v=20261125d" />
+  <script src="vendor/chart.umd.min.js"></script>
+  <script src="vendor/html2canvas.min.js"></script>
+  <script src="vendor/Sortable.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <span class="brand-mark">筑</span>
+        <div>
+          <div class="brand-name">筑计划</div>
+          <div class="brand-sub">学习工作台</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <button class="nav-item active" data-view="home">首页</button>
+        <button class="nav-item" data-view="plans">学习计划</button>
+        <button class="nav-item" data-view="today">今日待办</button>
+        <button class="nav-item" data-view="matrix">四象限</button>
+        <button class="nav-item" data-view="dashboard">数据看板</button>
+        <button class="nav-item" data-view="review">学习复盘</button>
+        <button class="nav-item" data-view="notes">沉淀本</button>
+        <button class="nav-item" data-view="settings">设置</button>
+      </nav>
+      <div class="sidebar-foot">
+        <button class="btn ghost block" id="btn-theme">切换深浅色</button>
+        <button class="btn ghost block" id="btn-tour">功能教学</button>
+      </div>
+    </aside>
+
+    <div class="main-wrap">
+      <header class="topbar">
+        <button class="btn icon only-mobile" id="btn-menu" aria-label="菜单">☰</button>
+        <div class="search-box">
+          <input id="global-search" type="search" placeholder="全局搜索任务 / 复盘 / 疑问 / 知识点…" />
+        </div>
+        <div class="top-actions">
+          <button class="btn" id="btn-checkin">今日签到</button>
+          <button class="btn primary" id="btn-quick-task">+ 临时任务</button>
+        </div>
+      </header>
+
+      <main class="content">
+        <!-- 首页 -->
+        <section class="view active" id="view-home">
+          <div class="hero-strip">
+            <div>
+              <h1 id="home-greeting">你好，开始今天的学习</h1>
+              <p class="muted" id="home-quote">加载激励语…</p>
+            </div>
+            <div class="streak-pill" id="streak-pill">连续 0 天</div>
+          </div>
+          <div class="grid-3 home-cards" id="home-stats"></div>
+          <div class="panel">
+            <div class="panel-head">
+              <h2>今日待办</h2>
+              <button class="btn ghost" data-goto="today">查看全部</button>
+            </div>
+            <div id="home-today-list" class="task-list"></div>
+          </div>
+          <div class="grid-2">
+            <div class="panel">
+              <div class="panel-head"><h2>当前计划进度</h2></div>
+              <div class="ring-wrap"><div class="chart-box ring-box"><canvas id="home-ring"></canvas></div></div>
+              <p class="center muted" id="home-plan-name">—</p>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h2>近 7 日学习时长</h2></div>
+              <div class="chart-box"><canvas id="home-bar"></canvas></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 计划 -->
+        <section class="view" id="view-plans">
+          <div class="panel-head page-head">
+            <h1>学习计划</h1>
+            <div class="row gap">
+              <select id="plan-switcher"></select>
+              <button class="btn" id="btn-new-plan">新建计划</button>
+              <button class="btn" id="btn-apply-template">套用模板</button>
+              <button class="btn ghost" id="btn-save-template">存为模板</button>
+            </div>
+          </div>
+          <div class="grid-2 top-align">
+            <div class="panel">
+              <div class="panel-head">
+                <h2 id="current-plan-title">计划详情</h2>
+                <div class="row gap">
+                  <select id="plan-status"></select>
+                  <button class="btn ghost danger" id="btn-delete-plan">删除</button>
+                </div>
+              </div>
+              <label class="field">计划名称<input id="plan-name" /></label>
+              <label class="field">总目标<textarea id="plan-goal" rows="2"></textarea></label>
+              <div class="grid-2">
+                <label class="field">周期模式
+                  <select id="plan-cycle">
+                    <option value="day">日计划</option>
+                    <option value="week">周计划</option>
+                    <option value="month">月计划</option>
+                    <option value="custom">自定义时段</option>
+                  </select>
+                </label>
+                <label class="field">起止日期
+                  <div class="row gap">
+                    <input type="date" id="plan-start" />
+                    <input type="date" id="plan-end" />
+                  </div>
+                </label>
+              </div>
+              <div class="row gap wrap filters">
+                <select id="task-filter-tag"><option value="">全部标签</option></select>
+                <select id="task-filter-priority">
+                  <option value="">全部优先级</option>
+                  <option value="high">高</option>
+                  <option value="mid">中</option>
+                  <option value="low">低</option>
+                </select>
+                <select id="task-filter-status">
+                  <option value="">全部状态</option>
+                  <option value="todo">未开始</option>
+                  <option value="doing">进行中</option>
+                  <option value="done">已完成</option>
+                  <option value="partial">部分完成</option>
+                  <option value="delayed">延期</option>
+                  <option value="abandoned">放弃</option>
+                </select>
+                <button class="btn primary" id="btn-add-task">+ 主任务</button>
+              </div>
+              <div id="plan-task-list" class="task-list nested"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h2>任务编辑</h2></div>
+              <div id="task-editor" class="empty-hint">选中左侧任务进行编辑</div>
+              <form id="task-form" class="hidden">
+                <label class="field">标题<input name="title" required /></label>
+                <div class="grid-2">
+                  <label class="field">预计时长(分)<input name="estimate" type="number" min="0" /></label>
+                  <label class="field">优先级
+                    <select name="priority">
+                      <option value="high">高</option>
+                      <option value="mid" selected>中</option>
+                      <option value="low">低</option>
+                    </select>
+                  </label>
+                  <label class="field">截止日期<input name="due" type="date" /></label>
+                  <label class="field">科目标签<input name="tag" list="tag-list" /></label>
+                  <label class="field">难度
+                    <select name="difficulty">
+                      <option value="1">简单</option>
+                      <option value="2" selected>普通</option>
+                      <option value="3">困难</option>
+                    </select>
+                  </label>
+                  <label class="field">状态
+                    <select name="status">
+                      <option value="todo">未开始</option>
+                      <option value="doing">进行中</option>
+                      <option value="done">已完成</option>
+                      <option value="partial">部分完成</option>
+                      <option value="delayed">延期</option>
+                      <option value="abandoned">放弃</option>
+                    </select>
+                  </label>
+                </div>
+                <label class="field">紧急重要
+                  <select name="quadrant">
+                    <option value="1">重要且紧急</option>
+                    <option value="2">重要不紧急</option>
+                    <option value="3">紧急不重要</option>
+                    <option value="4">不重要不紧急</option>
+                  </select>
+                </label>
+                <label class="field">循环
+                  <select name="repeat">
+                    <option value="none">不循环</option>
+                    <option value="daily">每日</option>
+                    <option value="weekly">每周（按截止日期星期）</option>
+                    <option value="monthly">每月（按截止日期日期）</option>
+                  </select>
+                </label>
+                <label class="field check"><input type="checkbox" name="urgent" /> 紧急</label>
+                <label class="field check"><input type="checkbox" name="important" /> 重要</label>
+                <div class="field"><span>操作时间线</span><div id="task-timeline" class="timeline-mini"></div></div>
+                <div class="row gap wrap">
+                  <button class="btn primary" type="submit">保存任务</button>
+                  <button class="btn" type="button" id="btn-add-sub">添加子任务</button>
+                  <button class="btn" type="button" id="btn-start-pomodoro">番茄钟</button>
+                  <button class="btn danger ghost" type="button" id="btn-delete-task">删除</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- 今日 -->
+        <section class="view" id="view-today">
+          <div class="panel-head page-head">
+            <h1>今日待办</h1>
+            <div class="row gap">
+              <button class="btn" id="btn-batch-done">批量完成</button>
+              <button class="btn" id="btn-batch-tag">批量改标签</button>
+              <button class="btn danger ghost" id="btn-batch-delete">批量删除</button>
+            </div>
+          </div>
+          <div class="panel">
+            <div id="today-list" class="task-list"></div>
+          </div>
+        </section>
+
+        <!-- 四象限 -->
+        <section class="view" id="view-matrix">
+          <div class="panel-head page-head"><h1>四象限视图</h1><p class="muted">拖拽任务到不同象限调整归属</p></div>
+          <div class="matrix" id="matrix-board">
+            <div class="matrix-cell" data-q="1"><h3>重要且紧急</h3><div class="matrix-list" data-q="1"></div></div>
+            <div class="matrix-cell" data-q="2"><h3>重要不紧急</h3><div class="matrix-list" data-q="2"></div></div>
+            <div class="matrix-cell" data-q="3"><h3>紧急不重要</h3><div class="matrix-list" data-q="3"></div></div>
+            <div class="matrix-cell" data-q="4"><h3>不重要不紧急</h3><div class="matrix-list" data-q="4"></div></div>
+          </div>
+        </section>
+
+        <!-- 看板 -->
+        <section class="view" id="view-dashboard">
+          <div class="panel-head page-head">
+            <h1>数据看板</h1>
+            <div class="row gap wrap">
+              <select id="dash-plan"></select>
+              <select id="dash-tag"><option value="">全部标签</option></select>
+              <select id="dash-range">
+                <option value="7">近 7 天</option>
+                <option value="30">近 30 天</option>
+              </select>
+              <button class="btn" id="btn-export-dash">导出看板图</button>
+              <button class="btn" id="btn-week-report">周报告</button>
+              <button class="btn" id="btn-month-report">月报告</button>
+            </div>
+          </div>
+          <div class="grid-4" id="dash-cards"></div>
+          <div class="grid-2" id="dash-charts">
+            <div class="panel"><h3>整体进度</h3><div class="chart-box ring-box"><canvas id="chart-ring"></canvas></div></div>
+            <div class="panel"><h3>每日学习时长</h3><div class="chart-box"><canvas id="chart-hours"></canvas></div></div>
+            <div class="panel"><h3>科目投入占比</h3><div class="chart-box"><canvas id="chart-pie"></canvas></div></div>
+            <div class="panel"><h3>任务完成趋势</h3><div class="chart-box"><canvas id="chart-trend"></canvas></div></div>
+            <div class="panel"><h3>优先级完成分布</h3><div class="chart-box"><canvas id="chart-priority"></canvas></div></div>
+            <div class="panel"><h3>打卡日历热力图</h3><div id="heatmap" class="heatmap"></div></div>
+          </div>
+          <div class="panel" id="report-box" hidden>
+            <div class="panel-head"><h2>学习报告</h2><button class="btn ghost" id="btn-close-report">关闭</button></div>
+            <pre id="report-text"></pre>
+          </div>
+        </section>
+
+        <!-- 复盘 -->
+        <section class="view" id="view-review">
+          <div class="panel-head page-head">
+            <h1>学习复盘</h1>
+            <div class="row gap">
+              <button class="btn primary" id="btn-new-daily-review">每日复盘</button>
+              <button class="btn" id="btn-new-weekly-review">每周复盘</button>
+              <button class="btn ghost" id="btn-export-review">导出 TXT</button>
+            </div>
+          </div>
+          <div class="grid-2 top-align">
+            <div class="panel">
+              <div class="row gap wrap">
+                <input id="review-search" placeholder="搜索复盘内容…" />
+                <select id="review-tag-filter"><option value="">全部标签</option></select>
+              </div>
+              <div id="review-timeline" class="timeline"></div>
+            </div>
+            <div class="panel">
+              <div id="review-editor" class="empty-hint">选择或新建一条复盘</div>
+              <form id="review-form" class="hidden">
+                <div class="grid-2">
+                  <label class="field">类型
+                    <select name="type"><option value="daily">每日</option><option value="weekly">每周</option></select>
+                  </label>
+                  <label class="field">日期<input name="date" type="date" /></label>
+                </div>
+                <label class="field">今日收获 / 本周收获<textarea name="gain" rows="2"></textarea></label>
+                <label class="field">未完成原因<textarea name="reason" rows="2"></textarea></label>
+                <label class="field">遇到的困难<textarea name="hard" rows="2"></textarea></label>
+                <label class="field">改进措施<textarea name="improve" rows="2"></textarea></label>
+                <label class="field">待解决疑问<textarea name="question" rows="2"></textarea></label>
+                <label class="field">自由笔记<textarea name="free" rows="4"></textarea></label>
+                <label class="field">关键词标签（逗号分隔）<input name="tags" /></label>
+                <div class="row gap">
+                  <button class="btn primary" type="submit">保存复盘</button>
+                  <button class="btn danger ghost" type="button" id="btn-delete-review">删除</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- 沉淀 -->
+        <section class="view" id="view-notes">
+          <div class="panel-head page-head">
+            <h1>沉淀本</h1>
+            <div class="row gap wrap">
+              <select id="notes-tag-filter" title="按科目筛选"><option value="">全部科目</option></select>
+            </div>
+          </div>
+          <div class="tabs" id="notes-tabs">
+            <button class="tab active" data-tab="questions">待解决疑问</button>
+            <button class="tab" data-tab="knowledge">知识点摘录</button>
+            <button class="tab" data-tab="mistakes">错题记录</button>
+          </div>
+          <div class="panel tab-panel active" id="tab-questions">
+            <button class="btn primary" id="btn-add-question">+ 疑问</button>
+            <div id="question-list" class="stack-list"></div>
+          </div>
+          <div class="panel tab-panel" id="tab-knowledge">
+            <button class="btn primary" id="btn-add-knowledge">+ 知识点</button>
+            <div id="knowledge-list" class="stack-list"></div>
+          </div>
+          <div class="panel tab-panel" id="tab-mistakes">
+            <button class="btn primary" id="btn-add-mistake">+ 错题</button>
+            <div id="mistake-list" class="stack-list"></div>
+          </div>
+        </section>
+
+        <!-- 设置 -->
+        <section class="view" id="view-settings">
+          <div class="panel-head page-head"><h1>设置与数据</h1></div>
+          <div class="grid-2 top-align">
+            <div class="panel">
+              <h2>激励语</h2>
+              <div id="quote-list" class="stack-list"></div>
+              <div class="row gap">
+                <input id="new-quote" placeholder="添加激励语" />
+                <button class="btn" id="btn-add-quote">添加</button>
+              </div>
+              <h2 class="mt">提醒</h2>
+              <div id="due-alerts" class="alert-list"></div>
+              <h2 class="mt">新手教学</h2>
+              <button class="btn" id="btn-replay-tour">重新观看功能教学</button>
+            </div>
+            <div class="panel">
+              <h2>数据管理</h2>
+              <div class="row gap wrap">
+                <button class="btn primary" id="btn-export-all">全量导出 JSON</button>
+                <label class="btn file-btn">导入 JSON<input type="file" id="import-json" accept="application/json,.json" hidden /></label>
+                <button class="btn" id="btn-export-plan">导出当前计划</button>
+                <button class="btn danger" id="btn-clear-all">一键清空</button>
+                <button class="btn ghost" id="btn-load-sample">载入示例数据</button>
+              </div>
+              <h2 class="mt">自动备份快照</h2>
+              <div id="backup-list" class="stack-list"></div>
+              <p class="muted tip">每日首次打开自动生成快照；点「回退」可恢复到该日版本。</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- 番茄钟专注层 -->
+  <div id="focus-overlay" class="overlay hidden">
+    <div class="focus-card">
+      <p class="muted">专注模式</p>
+      <h2 id="focus-task-title">任务</h2>
+      <div class="focus-timer" id="focus-timer">25:00</div>
+      <p id="focus-phase">专注中</p>
+      <div class="row gap center-row">
+        <button class="btn" id="btn-focus-toggle">暂停</button>
+        <button class="btn" id="btn-focus-skip">跳过</button>
+        <button class="btn danger" id="btn-focus-exit">退出</button>
+      </div>
+      <div class="row gap center-row mt">
+        <label>专注<input type="number" id="pomo-work" value="25" min="1" class="tiny" />分</label>
+        <label>休息<input type="number" id="pomo-break" value="5" min="1" class="tiny" />分</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- 通用弹窗 -->
+  <div id="modal" class="overlay hidden">
+    <div class="modal-card">
+      <h2 id="modal-title">提示</h2>
+      <div id="modal-body"></div>
+      <div class="row gap end" id="modal-actions"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- 新手全功能教学 -->
+  <div id="tour" class="tour hidden" aria-live="polite">
+    <div class="tour-mask" id="tour-mask"></div>
+    <div class="tour-spotlight" id="tour-spotlight"></div>
+    <div class="tour-cursor" id="tour-cursor" aria-hidden="true">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+        <path d="M5 3l14 8.5-6.2 1.4L10.2 21 5 3z" fill="currentColor" stroke="#fff" stroke-width="1.2"/>
+      </svg>
+    </div>
+    <div class="tour-card" id="tour-card">
+      <div class="tour-progress"><span id="tour-step-num">1</span> / <span id="tour-step-total">1</span></div>
+      <h2 id="tour-title">新手教学</h2>
+      <p id="tour-text"></p>
+      <div class="row gap wrap" id="tour-actions">
+        <button class="btn ghost" id="tour-skip">跳过教学</button>
+        <button class="btn primary" id="tour-next">下一步</button>
+      </div>
+    </div>
+  </div>
+
+  <datalist id="tag-list"></datalist>
+  <script src="js/store.js?v=20261125d"></script>
+  <script src="js/app.js?v=20261125d"></script>
+</body>
+</html>
